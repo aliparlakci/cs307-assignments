@@ -1,4 +1,4 @@
        -A NUM, --after-context=NUM
-              Print NUM lines of trailing context after matching lines.  Places a line containing a group separator (--) between contiguous groups of matches.  With the  -o  or
-              --only-matching option, this has no effect and a warning is given.
+              Print  NUM  lines  of  trailing context after matching lines.  Places a line containing a group separator (--) between contiguous
+              groups of matches.  With the -o or --only-matching option, this has no effect and a warning is given.
 

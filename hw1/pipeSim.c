@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 
+// Iki tane file destriptor kullan, 3 tane process yarat
+
 int main(int argc, char *argv[])
 {
     int fd[2]; // file descriptor
@@ -43,6 +45,8 @@ int main(int argc, char *argv[])
         close(STDIN_FILENO); // close the stdin so that we can use our pipe
         dup(fd[0]); // replace STDIN with pipe
 
+        dup2(fd1, 0);
+aa
         char *grep_args[4];
         grep_args[0] = strdup("grep"); 
         grep_args[1] = strdup("\\--after-context");
