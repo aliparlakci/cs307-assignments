@@ -9,52 +9,67 @@
 
 int main(int argc, char *argv[])
 {
-    int fd[2]; // file descriptor
+    printf("I’m SHELL process, with PID: %d\n", (int)getpid());
 
+    int fd[2];
     pipe(fd);
 
-    int rc = fork();
-    if (rc < 0)
+    int rc;
+    if ((rc = fork()) < 0)
     {
-        fprintf(stderr, "fork failed\n");
+        printf("fork error");
         exit(1);
     }
     else if (rc == 0)
     {
-        close(fd[0]); // close the output of fd
+        printf("I’m MAN process, with PID: %d\n", (int)getpid());
 
-        close(STDOUT_FILENO); // close the stdout
-        dup(fd[1]); // input of fd replaces stdout
+        close(fd[0]);
+        dup2(fd[1], STDOUT_FILENO);
 
-        // Execute man grep
         char *man_args[3];
-        man_args[0] = strdup("man"); 
+        man_args[0] = strdup("man");
         man_args[1] = strdup("grep");
-        man_args[2] = NULL;          
+        man_args[2] = NULL;
         execvp(man_args[0], man_args);
+
+        return 0;
     }
-    else
+
+    waitpid(rc, NULL, 0);
+
+    if ((rc = fork()) < 0)
     {
-        int wc = wait(NULL); // wait for man command to exit
+        printf("fork error");
+        exit(1);
+    }
+    else if (rc == 0)
+    {
+        printf("I’m GREP process, with PID: %d\n", (int)getpid());
 
-        close(fd[1]); // close the input of pipe
+        int new_file = open("./output.txt", O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 
-        close(STDOUT_FILENO); // close the stdout
-        open("./output.txt", O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU); // output.txt is the output file
+        close(fd[1]);
+        dup2(fd[0], STDIN_FILENO);
+        dup2(new_file, STDOUT_FILENO);
 
-        close(STDIN_FILENO); // close the stdin so that we can use our pipe
-        dup(fd[0]); // replace STDIN with pipe
-
-        dup2(fd1, 0);
-aa
         char *grep_args[4];
         grep_args[0] = strdup("grep"); 
         grep_args[1] = strdup("\\--after-context");
         grep_args[2] = strdup("--after-context=3");
         grep_args[3] = NULL;          
         execvp(grep_args[0], grep_args);
+
+        return 0;
+    }
+    else
+    {
+        close(fd[0]);
+        close(fd[1]);
+        
+        wait(NULL);
+        printf("I’m SHELL process, with PID: %d\n", (int)getpid());
     }
 
     return 0;
 }
-
