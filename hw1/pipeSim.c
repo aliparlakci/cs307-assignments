@@ -9,7 +9,8 @@
 
 int main(int argc, char *argv[])
 {
-    printf("I’m SHELL process, with PID: %d\n", (int)getpid());
+    printf("I’m SHELL process, with PID: %d - ", (int)getpid());
+    printf("Main command is: man grep | grep \"\\--after-context\" --after-context=3\n");
 
     int fd[2];
     pipe(fd);
@@ -22,7 +23,8 @@ int main(int argc, char *argv[])
     }
     else if (rc == 0)
     {
-        printf("I’m MAN process, with PID: %d\n", (int)getpid());
+        printf("I’m MAN process, with PID: %d - ", (int)getpid());
+        printf("My command is: man grep\n");
 
         close(fd[0]);
         dup2(fd[1], STDOUT_FILENO);
@@ -45,7 +47,8 @@ int main(int argc, char *argv[])
     }
     else if (rc == 0)
     {
-        printf("I’m GREP process, with PID: %d\n", (int)getpid());
+        printf("I’m GREP process, with PID: %d - ", (int)getpid());
+        printf("My command is: grep \"\\--after-context\" --after-context=3\n");
 
         int new_file = open("./output.txt", O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 
@@ -68,7 +71,8 @@ int main(int argc, char *argv[])
         close(fd[1]);
         
         wait(NULL);
-        printf("I’m SHELL process, with PID: %d\n", (int)getpid());
+        printf("I’m SHELL process, with PID: %d - ", (int)getpid());
+        printf("execution is completed, you can find the results in output.txt\n");
     }
 
     return 0;
