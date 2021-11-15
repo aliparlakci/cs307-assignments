@@ -4,11 +4,22 @@
 #include <pthread.h>
 
 char **MATRIX;
-pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+
+struct peterson_lock
+{
+    int flag[2];
+    int turn;
+};
+struct peterson_lock mutex;
+
 int turn = 1;
 int game_over = 0;
 
 int matrix_size = 3;
+
+void initialize_lock(struct peterson_lock *l);
+void lock(struct peterson_lock *l, int thread_id);
+void unlock(struct peterson_lock *l, int thread_id);
 
 void initialize_matrix(int N);
 void *play(void *arg0);
@@ -23,6 +34,8 @@ int main(int argc, char *argv[])
         return 1;
     }
     matrix_size = atoi(argv[1]);
+
+    initialize_lock(&mutex);
 
     initialize_matrix(matrix_size);
     srand(time(NULL));
@@ -60,10 +73,10 @@ void *play(void *arg0)
     int x = 0, y = 0;
     while (game_over == 0)
     {
-        pthread_mutex_lock(&m);
+        lock(&mutex, *player - 1);
         if ((game_over = is_game_over()) != 0)
         {
-            pthread_mutex_unlock(&m);
+            unlock(&mutex, *player - 1);
             return NULL;
         }
         if (turn == *player)
@@ -79,13 +92,33 @@ void *play(void *arg0)
 
             turn = *player == 1 ? 2 : 1;
 
-            pthread_mutex_unlock(&m);
+            unlock(&mutex, *player - 1);
         }
         else
         {
-            pthread_mutex_unlock(&m);
+            unlock(&mutex, *player - 1);
         }
     }
+}
+
+void initialize_lock(struct peterson_lock *l)
+{
+    l->flag[0] = 0;
+    l->flag[1] = 0;
+
+    l->turn = 0;
+}
+
+void lock(struct peterson_lock *l, int thread_id)
+{
+    l->flag[thread_id] = 1;
+    l->turn = 1 - thread_id;
+    while ( (l->flag[1-thread_id] == 1) && (l->turn == 1 - thread_id) );
+}
+
+void unlock(struct peterson_lock *l, int thread_id)
+{
+    l->flag[thread_id] = 0;
 }
 
 void initialize_matrix(int N)
