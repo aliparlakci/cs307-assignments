@@ -10,7 +10,7 @@
 int main(int argc, char *argv[])
 {
     printf("I’m SHELL process, with PID: %d - ", (int)getpid());
-    printf("Main command is: man grep | grep \"\\--after-context\" --after-context=3\n");
+    printf("Main command is: man diff | grep \"\\--ignore-all-space\" --after-context=1\n");
 
     int fd[2];
     pipe(fd);
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 
         char *man_args[3];
         man_args[0] = strdup("man");
-        man_args[1] = strdup("grep");
+        man_args[1] = strdup("diff");
         man_args[2] = NULL;
         execvp(man_args[0], man_args);
 
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     else if (rc == 0)
     {
         printf("I’m GREP process, with PID: %d - ", (int)getpid());
-        printf("My command is: grep \"\\--after-context\" --after-context=3\n");
+        printf("My command is: grep \"\\--ignore-all-space\" --after-context=1\n");
 
         int new_file = open("./output.txt", O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 
@@ -58,8 +58,8 @@ int main(int argc, char *argv[])
 
         char *grep_args[4];
         grep_args[0] = strdup("grep"); 
-        grep_args[1] = strdup("\\--after-context");
-        grep_args[2] = strdup("--after-context=3");
+        grep_args[1] = strdup("\\--ignore-all-space");
+        grep_args[2] = strdup("--after-context=1");
         grep_args[3] = NULL;          
         execvp(grep_args[0], grep_args);
 

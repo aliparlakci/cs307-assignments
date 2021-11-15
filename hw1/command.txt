@@ -1,1 +1,1 @@
-man grep | grep "\--after-context" --after-context=3
+man diff | grep "\--ignore-all-space" --after-context=1 --no-ignore-case
