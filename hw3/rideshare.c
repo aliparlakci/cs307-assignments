@@ -48,6 +48,7 @@ int divisibleByFour(int x);
 pthread_mutex_t lock;
 sem_t semA;
 sem_t semB;
+sem_t semC;
 
 pthread_t *threads;
 
@@ -74,7 +75,7 @@ int main(int argc, char *argv[])
     sem_init(&semA, 0);
     sem_init(&semB, 0);
 
-    pthread_barrier_init(&barrier, NULL, total_fans);
+    pthread_barrier_init(&barrier, NULL, 4);
 
     threads = malloc(sizeof(pthread_t) * total_fans);
     for (int i = 0; i < teamA_fans; i++)
@@ -99,24 +100,22 @@ void *fanA(void *args)
 {
     int is_captain = 0;
 
-    printf("Thread ID: %d, Team: A, I am looking for a car\n", gettid());
+    printf("Thread ID: %ld, Team: A, I am looking for a car\n", pthread_self());
 
     pthread_mutex_lock(&lock);
-    if (semA.val <= -3)
+    if (semA.val == -3)
     {
         sem_post(&semA);
         sem_post(&semA);
         sem_post(&semA);
         is_captain = 1;
-        pthread_mutex_unlock(&lock);
     }
-    else if (semA.val <= -1 && semB.val <= -2)
+    else if (semA.val == -1 && semB.val == -2)
     {
         sem_post(&semA);
         sem_post(&semB);
         sem_post(&semB);
         is_captain = 1;
-        pthread_mutex_unlock(&lock);
     }
     else
     {
@@ -124,12 +123,15 @@ void *fanA(void *args)
         sem_wait(&semA);
     }
 
-    printf("Thread ID: %d, Team: A, I have found a spot in a car\n", gettid());
+    printf("Thread ID: %ld, Team: A, I have found a spot in a car\n", pthread_self());
     pthread_barrier_wait(&barrier);
 
     if (is_captain)
     {
-        printf("Thread ID: %d, Team: A, I am the captain and driving the car\n", gettid());
+        printf("Thread ID: %ld, Team: A, I am the captain and driving the car\n", pthread_self());
+        pthread_barrier_destroy(&barrier);
+        pthread_barrier_init(&barrier, NULL, 4);
+        pthread_mutex_unlock(&lock);
     }
 }
 
@@ -137,24 +139,22 @@ void *fanB(void *args)
 {
     int is_captain = 0;
 
-    printf("Thread ID: %d, Team: B, I am looking for a car\n", gettid());
+    printf("Thread ID: %ld, Team: B, I am looking for a car\n", pthread_self());
 
     pthread_mutex_lock(&lock);
-    if (semB.val <= -3)
+    if (semB.val == -3)
     {
         sem_post(&semB);
         sem_post(&semB);
         sem_post(&semB);
         is_captain = 1;
-        pthread_mutex_unlock(&lock);
     }
-    else if (semB.val <= -1 && semA.val <= -2)
+    else if (semB.val == -1 && semA.val == -2)
     {
         sem_post(&semB);
         sem_post(&semA);
         sem_post(&semA);
         is_captain = 1;
-        pthread_mutex_unlock(&lock);
     }
     else
     {
@@ -162,12 +162,15 @@ void *fanB(void *args)
         sem_wait(&semB);
     }
 
-    printf("Thread ID: %d, Team: B, I have found a spot in a car\n", gettid());
+    printf("Thread ID: %ld, Team: B, I have found a spot in a car\n", pthread_self());
     pthread_barrier_wait(&barrier);
 
     if (is_captain)
     {
-        printf("Thread ID: %d, Team: B, I am the captain and driving the car\n", gettid());
+        printf("Thread ID: %ld, Team: B, I am the captain and driving the car\n", pthread_self());
+        pthread_barrier_destroy(&barrier);
+        pthread_barrier_init(&barrier, NULL, 4);
+        pthread_mutex_unlock(&lock);
     }
 }
 
