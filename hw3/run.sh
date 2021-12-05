@@ -1,0 +1,1 @@
+gcc rideshare.c -o rideshare -std=gnu99 -lpthread && ./rideshare 2 6
