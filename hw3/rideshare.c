@@ -51,6 +51,8 @@ sem_t semB;
 
 pthread_t *threads;
 
+pthread_barrier_t barrier;
+
 int main(int argc, char *argv[])
 {
     if (argc != 3)
@@ -71,6 +73,8 @@ int main(int argc, char *argv[])
 
     sem_init(&semA, 0);
     sem_init(&semB, 0);
+
+    pthread_barrier_init(&barrier, NULL, total_fans);
 
     threads = malloc(sizeof(pthread_t) * total_fans);
     for (int i = 0; i < teamA_fans; i++)
@@ -123,6 +127,8 @@ void *fanA(void *args)
         printf("Thread ID: %d, Team: A, I have found a spot in a car\n", gettid());
     }
 
+    pthread_barrier_wait(&barrier);
+
     if (is_captain)
     {
         printf("Thread ID: %d, Team: A, I am the captain and driving the car\n", gettid());
@@ -160,6 +166,9 @@ void *fanB(void *args)
         sem_wait(&semB);
         printf("Thread ID: %d, Team: B, I have found a spot in a car\n", gettid());
     }
+
+    pthread_barrier_wait(&barrier);
+
 
     if (is_captain)
     {
