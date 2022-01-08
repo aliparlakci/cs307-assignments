@@ -28,7 +28,6 @@ int main(int argc, char argv[])
     list_node_t *db = list_init();
 
     read_database(db);
-
     traverse_directory(db);
 
     list_destroy(db);
@@ -51,14 +50,12 @@ void traverse_directory(list_node_t *db)
         strcat(new_path, d->d_name);
         if (d->d_type == 4 && strcmp(d->d_name, ".") != 0 && strcmp(d->d_name, "..") != 0)
         {
-            printf("D: %s\n", new_path);
             traverse_directory_rec(db, new_path);
         }
         else if (d->d_type == 8)
         {
             if ( strcmp(d->d_name, "database.txt") != 0 && strcmp(&d->d_name[strlen(d->d_name)-4], ".txt") == 0 )
             {
-                printf("F: %s\n", new_path);      
                 correct_file(db, new_path);
             }
         }
@@ -81,20 +78,18 @@ void traverse_directory_rec(list_node_t *db, char *dir)
         strcat(new_path, d->d_name);
         if (d->d_type == 4 && strcmp(d->d_name, ".") != 0 && strcmp(d->d_name, "..") != 0)
         {
-            printf("D: %s\n", new_path);
             traverse_directory_rec(db, new_path);
         }
         else if (d->d_type == 8)
         {
             if ( strcmp(&d->d_name[strlen(d->d_name)-4], ".txt") == 0 )
             {
-                printf("F: %s\n", new_path);      
                 correct_file(db, new_path);
             }
         }
     } 
 
-    //free(path);  
+    free(path);  
 }
 
 void read_database(list_node_t *db)
@@ -110,6 +105,8 @@ void read_database(list_node_t *db)
     {
         list_append(db, sex, name, surname);
     }
+
+    fclose(file);
 }
 
 void correct_file(list_node_t *db, char * location)
