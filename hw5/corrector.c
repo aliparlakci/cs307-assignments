@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <dirent.h>
 
 typedef struct node
 {
@@ -11,8 +12,10 @@ typedef struct node
     struct node *next;
 } list_node_t;
 
+void traverse_directory(list_node_t *db);
+void traverse_directory_rec(list_node_t *db, char *dir);
 void read_database(list_node_t *db);
-void correct_file(char * location, list_node_t *db);
+void correct_file(list_node_t *db, char * location);
 list_node_t *list_init();
 void list_append(list_node_t *head, char *sex, char *name, char *surname);
 char *list_find_sex(list_node_t *head, char *name);
@@ -25,10 +28,73 @@ int main(int argc, char argv[])
     list_node_t *db = list_init();
 
     read_database(db);
-    correct_file("example.txt", db);
+
+    traverse_directory(db);
 
     list_destroy(db);
     return 0;
+}
+
+void traverse_directory(list_node_t *db)
+{
+    char path[256] = ".";
+
+    DIR *dp = opendir(path);
+    assert(dp != NULL);
+    struct dirent *d;
+
+    while ((d = readdir(dp)) != NULL)
+    {
+        char new_path[256];
+        strcpy(new_path, path);
+        strcat(new_path, "/");
+        strcat(new_path, d->d_name);
+        if (d->d_type == 4 && strcmp(d->d_name, ".") != 0 && strcmp(d->d_name, "..") != 0)
+        {
+            printf("D: %s\n", new_path);
+            traverse_directory_rec(db, new_path);
+        }
+        else if (d->d_type == 8)
+        {
+            if ( strcmp(d->d_name, "database.txt") != 0 && strcmp(&d->d_name[strlen(d->d_name)-4], ".txt") == 0 )
+            {
+                printf("F: %s\n", new_path);      
+                correct_file(db, new_path);
+            }
+        }
+    }
+}
+
+void traverse_directory_rec(list_node_t *db, char *dir)
+{
+    char *path = strdup(dir);
+
+    DIR *dp = opendir(path);
+    assert(dp != NULL);
+    struct dirent *d;
+
+    while ((d = readdir(dp)) != NULL)
+    {
+        char new_path[256];
+        strcpy(new_path, path);
+        strcat(new_path, "/");
+        strcat(new_path, d->d_name);
+        if (d->d_type == 4 && strcmp(d->d_name, ".") != 0 && strcmp(d->d_name, "..") != 0)
+        {
+            printf("D: %s\n", new_path);
+            traverse_directory_rec(db, new_path);
+        }
+        else if (d->d_type == 8)
+        {
+            if ( strcmp(&d->d_name[strlen(d->d_name)-4], ".txt") == 0 )
+            {
+                printf("F: %s\n", new_path);      
+                correct_file(db, new_path);
+            }
+        }
+    } 
+
+    //free(path);  
 }
 
 void read_database(list_node_t *db)
@@ -46,7 +112,7 @@ void read_database(list_node_t *db)
     }
 }
 
-void correct_file(char * location, list_node_t *db)
+void correct_file(list_node_t *db, char * location)
 {
     FILE * fptr = fopen(location, "r+");
 
@@ -56,7 +122,9 @@ void correct_file(char * location, list_node_t *db)
     {
         long name_cursor, surname_cursor;
         char name[256], surname[256];
-        if (strcmp(buffer, "Ms.") || strcmp(buffer, "Mr."))
+        int is_woman = 0;
+
+        if (strcmp(buffer, "Ms.") == 0 || strcmp(buffer, "Mr.") == 0)
         {
             name_cursor = ftell(fptr);
             fscanf(fptr, "%s", name);
@@ -64,10 +132,13 @@ void correct_file(char * location, list_node_t *db)
             surname_cursor = ftell(fptr);
             fscanf(fptr, "%s", surname);
 
-            fseek(fptr, cursor, SEEK_SET);
-            fputs(list_find_sex(db, name), fptr);
+            is_woman = strcmp(list_find_sex(db, name), "f") == 0;
 
-            fseek(fptr, surname_cursor, SEEK_SET);
+            fseek(fptr, name_cursor - 3, SEEK_SET);
+            if (is_woman) fputs("Ms.", fptr);
+            else fputs("Mr.", fptr);
+
+            fseek(fptr, surname_cursor + 1, SEEK_SET);
             fputs(list_find_surname(db, name), fptr);
         }
 
@@ -78,7 +149,6 @@ void correct_file(char * location, list_node_t *db)
 }
 
 // list functions begin
-
 list_node_t *list_init()
 {
     list_node_t *head = (list_node_t *)malloc(sizeof(list_node_t));
@@ -104,10 +174,11 @@ char *list_find_sex(list_node_t *head, char *name)
 
     while (ptr)
     {
-        if (strcmp(name, ptr->name))
+        if (strcmp(name, ptr->name) == 0)
         {
             return ptr->sex;
         }
+        ptr = ptr->next;
     }
 
     return 0;
@@ -119,10 +190,11 @@ char *list_find_surname(list_node_t *head, char *name)
 
     while (ptr)
     {
-        if (strcmp(name, ptr->name))
+        if (strcmp(name, ptr->name) == 0)
         {
             return ptr->surname;
         }
+        ptr = ptr->next;
     }
 
     return 0;
@@ -156,5 +228,4 @@ void list_destroy(list_node_t *head)
     }
     free(ptr);
 }
-
 // list functions end
