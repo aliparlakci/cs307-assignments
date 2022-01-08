@@ -135,9 +135,9 @@ private:
         if (ptr->ID != -1)
             return -1;
 
-        if (ptr != memory.end())
+        if (++ptr != memory.end())
         {
-            if ((++ptr)->ID == -1)
+            if (ptr->ID == -1)
             {
                 position->size += ptr->size;
                 memory.erase(ptr);
